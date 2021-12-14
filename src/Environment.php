@@ -56,6 +56,7 @@ class Environment
     private $globals = [];
     private $resolvedGlobals;
     private $loadedTemplates;
+    private $templateClasses = [];
     private $strictVariables;
     private $templateClassPrefix = '__TwigTemplate_';
     private $originalCache;
@@ -258,9 +259,13 @@ class Environment
      */
     public function getTemplateClass(string $name, int $index = null): string
     {
+        if (isset($this->templateClasses[$name])) {
+            return $this->templateClasses[$name];
+        }
+
         $key = $this->getLoader()->getCacheKey($name).$this->optionsHash;
 
-        return $this->templateClassPrefix.hash('sha256', $key).(null === $index ? '' : '___'.$index);
+        return $this->templateClasses[$name] = $this->templateClassPrefix.hash('sha256', $key).(null === $index ? '' : '___'.$index);
     }
 
     /**
@@ -802,6 +807,7 @@ class Environment
 
     private function updateOptionsHash(): void
     {
+        $this->templateClasses = [];
         $this->optionsHash = implode(':', [
             $this->extensionSet->getSignature(),
             \PHP_MAJOR_VERSION,
