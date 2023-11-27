@@ -13,7 +13,6 @@ namespace Twig\Tests;
 
 use Twig\DeprecatedCallableInfo;
 use Twig\Extension\AbstractExtension;
-use Twig\Extension\AttributeExtension;
 use Twig\Extension\DebugExtension;
 use Twig\Extension\SandboxExtension;
 use Twig\Extension\StringLoaderExtension;
@@ -47,7 +46,6 @@ class IntegrationTest extends IntegrationTestCase
             new SandboxExtension($policy, false),
             new StringLoaderExtension(),
             new TwigTestExtension(),
-            new AttributeExtension(new \ArrayIterator(['']))
         ];
     }
 
