@@ -17,6 +17,7 @@ use Twig\Extension\GlobalsInterface;
 use Twig\Extension\StagingExtension;
 use Twig\Node\Expression\Binary\AbstractBinary;
 use Twig\Node\Expression\Unary\AbstractUnary;
+use Twig\Extension\WithLastModified;
 use Twig\NodeVisitor\NodeVisitorInterface;
 use Twig\TokenParser\TokenParserInterface;
 
@@ -119,6 +120,9 @@ final class ExtensionSet
         foreach ($this->extensions as $extension) {
             $r = new \ReflectionObject($extension);
             if (is_file($r->getFileName()) && ($extensionTime = filemtime($r->getFileName())) > $this->lastModified) {
+                $this->lastModified = $extensionTime;
+            }
+            if ($extension instanceof WithLastModified && ($extensionTime = $extension->getLastModified()) > $this->lastModified) {
                 $this->lastModified = $extensionTime;
             }
         }
