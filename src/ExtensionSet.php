@@ -18,6 +18,7 @@ use Twig\Extension\StagingExtension;
 use Twig\Node\Expression\Binary\AbstractBinary;
 use Twig\Node\Expression\Unary\AbstractUnary;
 use Twig\Extension\WithLastModified;
+use Twig\Extension\ModificationAwareInterface;
 use Twig\NodeVisitor\NodeVisitorInterface;
 use Twig\TokenParser\TokenParserInterface;
 
@@ -122,7 +123,7 @@ final class ExtensionSet
             if (is_file($r->getFileName()) && $this->lastModified < $extensionTime = filemtime($r->getFileName())) {
                 $this->lastModified = $extensionTime;
             }
-            if ($extension instanceof WithLastModified && $this->lastModified < $extensionTime = $extension->getLastModified()) {
+            if ($extension instanceof ModificationAwareInterface && $this->lastModified < $extensionTime = $extension->getLastModified()) {
                 $this->lastModified = $extensionTime;
             }
         }
