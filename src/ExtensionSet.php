@@ -12,6 +12,7 @@
 namespace Twig;
 
 use Twig\Error\RuntimeError;
+use Twig\Extension\AttributeExtension;
 use Twig\Extension\ExtensionInterface;
 use Twig\Extension\GlobalsInterface;
 use Twig\Extension\StagingExtension;
@@ -81,11 +82,15 @@ final class ExtensionSet
             throw new RuntimeError(\sprintf('The "%s" extension is not enabled.', $class));
         }
 
+        if (is_string($this->extensions[$class])) {
+            throw new RuntimeError(sprintf('The "%s" uses attributes, it requires a runtime.', $class));
+        }
+
         return $this->extensions[$class];
     }
 
     /**
-     * @param ExtensionInterface[] $extensions
+     * @param list<ExtensionInterface|class-string> $extensions
      */
     public function setExtensions(array $extensions): void
     {
@@ -119,11 +124,8 @@ final class ExtensionSet
         }
 
         foreach ($this->extensions as $extension) {
-            $r = new \ReflectionObject($extension);
-            if (is_file($r->getFileName()) && $this->lastModified < $extensionTime = filemtime($r->getFileName())) {
-                $this->lastModified = $extensionTime;
-            }
-            if ($extension instanceof ModificationAwareInterface && $this->lastModified < $extensionTime = $extension->getLastModified()) {
+            $r = new \ReflectionClass($extension);
+            if (($filename = $r->getFileName()) && is_file($filename) && $this->lastModified < $extensionTime = filemtime($filename)) {
                 $this->lastModified = $extensionTime;
             }
         }
@@ -131,9 +133,12 @@ final class ExtensionSet
         return $this->lastModified;
     }
 
-    public function addExtension(ExtensionInterface $extension): void
+    /**
+     * @param ExtensionInterface|class-string|object $extension
+     */
+    public function addExtension(string|object $extension): void
     {
-        $class = \get_class($extension);
+        $class = is_string($extension) ? $extension : \get_class($extension);
 
         if ($this->initialized) {
             throw new \LogicException(\sprintf('Unable to register extension "%s" as extensions have already been initialized.', $class));
@@ -427,9 +432,16 @@ final class ExtensionSet
         $this->unaryOperators = [];
         $this->binaryOperators = [];
 
+        $classes = [];
         foreach ($this->extensions as $extension) {
-            $this->initExtension($extension);
+            if ($extension instanceof ExtensionInterface) {
+                $this->initExtension($extension);
+            } else {
+                $classes[] = $extension;
+            }
         }
+
+        $this->initExtension(new AttributeExtension($classes));
         $this->initExtension($this->staging);
         // Done at the end only, so that an exception during initialization does not mark the environment as initialized when catching the exception
         $this->initialized = true;
