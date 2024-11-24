@@ -91,6 +91,7 @@ final class AttributeExtension extends AbstractExtension
             foreach ($reflectionClass->getMethods() as $method) {
                 // Filters
                 foreach ($method->getAttributes(AsTwigFilter::class) as $attribute) {
+                    /** @var AsTwigFilter $attribute */
                     $attribute = $attribute->newInstance();
 
                     $name = $attribute->name;
@@ -116,6 +117,7 @@ final class AttributeExtension extends AbstractExtension
 
                 // Functions
                 foreach ($method->getAttributes(AsTwigFunction::class) as $attribute) {
+                    /** @var AsTwigFunction $attribute */
                     $attribute = $attribute->newInstance();
 
                     $name = $attribute->name;
@@ -139,6 +141,7 @@ final class AttributeExtension extends AbstractExtension
 
                 // Tests
                 foreach ($method->getAttributes(AsTwigTest::class) as $attribute) {
+                    /** @var AsTwigTest $attribute */
                     $attribute = $attribute->newInstance();
 
                     $name = $attribute->name;
@@ -155,8 +158,8 @@ final class AttributeExtension extends AbstractExtension
         }
 
         // Assign all at the end to avoid inconsistent state in case of exception
-        $this->filters = $filters;
-        $this->functions = $functions;
-        $this->tests = $tests;
+        $this->filters = array_values($filters);
+        $this->functions = array_values($functions);
+        $this->tests = array_values($tests);
     }
 }

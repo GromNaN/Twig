@@ -103,8 +103,8 @@ class AttributeExtensionTest extends TestCase
         $class = ExtensionWithAttributes::class;
         $extension = new AttributeExtension([$class]);
 
-        $this->assertSame([$class, 'fooFilter'], $extension->getFilters()['foo']->getCallable());
-        $this->assertSame([$class, 'fooFunction'], $extension->getFunctions()['foo']->getCallable());
-        $this->assertSame([$class, 'fooTest'], $extension->getTests()['foo']->getCallable());
+        $this->assertSame([$class, 'fooFilter'], $extension->getFilters()[0]->getCallable());
+        $this->assertSame([$class, 'fooFunction'], $extension->getFunctions()[0]->getCallable());
+        $this->assertSame([$class, 'fooTest'], $extension->getTests()[0]->getCallable());
     }
 }
