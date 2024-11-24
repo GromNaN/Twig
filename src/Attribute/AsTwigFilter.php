@@ -11,6 +11,7 @@
 
 namespace Twig\Attribute;
 
+use Twig\DeprecatedCallableInfo;
 use Twig\Node\Node;
 use Twig\TwigFilter;
 
@@ -64,15 +65,7 @@ final class AsTwigFilter
          */
         public ?array $preservesSafety = null,
 
-        /**
-         * Set to true if the filter is deprecated.
-         */
-        public bool|string $deprecated = false,
-
-        /**
-         * The alternative filter name to suggest when the deprecated filter is called.
-         */
-        public ?string $alternative = null,
+        public ?DeprecatedCallableInfo $deprecationInfo = null,
     ) {
     }
 }

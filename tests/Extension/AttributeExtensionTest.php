@@ -3,6 +3,7 @@
 namespace Twig\Tests\Extension;
 
 use PHPUnit\Framework\TestCase;
+use Twig\DeprecatedCallableInfo;
 use Twig\Extension\AttributeExtension;
 use Twig\Tests\Extension\Fixtures\ExtensionWithAttributes;
 use Twig\TwigFilter;
@@ -10,7 +11,8 @@ use Twig\TwigFunction;
 use Twig\TwigTest;
 
 /**
- * @requires PHP >= 8.0
+ * Nested attributes are not supported in PHP 8.0.
+ * @requires PHP >= 8.1
  */
 class AttributeExtensionTest extends TestCase
 {
@@ -40,7 +42,7 @@ class AttributeExtensionTest extends TestCase
         yield 'with env and context' => ['with_env_and_context_filter', 'withEnvAndContextFilter', ['needs_environment' => true, 'needs_context' => true]];
         yield 'no argument' => ['no_arg_filter', 'noArgFilter', []];
         yield 'variadic' => ['variadic_filter', 'variadicFilter', ['is_variadic' => true]];
-        yield 'deprecated' => ['deprecated_filter', 'deprecatedFilter', ['deprecated' => true, 'alternative' => 'bar']];
+        yield 'deprecated' => ['deprecated_filter', 'deprecatedFilter', ['deprecation_info' => new DeprecatedCallableInfo('foo/bar', '1.2')]];
         yield 'pattern' => ['pattern_*_filter', 'patternFilter', []];
     }
 
@@ -70,7 +72,7 @@ class AttributeExtensionTest extends TestCase
         yield 'with env and context' => ['with_env_and_context_function', 'withEnvAndContextFunction', ['needs_environment' => true, 'needs_context' => true]];
         yield 'no argument' => ['no_arg_function', 'noArgFunction', []];
         yield 'variadic' => ['variadic_function', 'variadicFunction', ['is_variadic' => true]];
-        yield 'deprecated' => ['deprecated_function', 'deprecatedFunction', ['deprecated' => true, 'alternative' => 'bar']];
+        yield 'deprecated' => ['deprecated_function', 'deprecatedFunction', ['deprecation_info' => new DeprecatedCallableInfo('foo/bar', '1.2')]];
     }
 
     /**
@@ -95,7 +97,7 @@ class AttributeExtensionTest extends TestCase
     {
         yield 'with name' => ['foo', 'fooTest', []];
         yield 'variadic' => ['variadic_test', 'variadicTest', ['is_variadic' => true]];
-        yield 'deprecated' => ['deprecated_test', 'deprecatedTest', ['deprecated' => true, 'alternative' => 'bar']];
+        yield 'deprecated' => ['deprecated_test', 'deprecatedTest', ['deprecation_info' => new DeprecatedCallableInfo('foo/bar', '1.2')]];
     }
 
     public function testRuntimeExtension()

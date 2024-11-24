@@ -110,8 +110,7 @@ final class AttributeExtension extends AbstractExtension
                         'is_safe_callback' => $attribute->isSafeCallback,
                         'pre_escape' => $attribute->preEscape,
                         'preserves_safety' => $attribute->preservesSafety,
-                        'deprecated' => $attribute->deprecated,
-                        'alternative' => $attribute->alternative,
+                        'deprecation_info' => $attribute->deprecationInfo,
                     ]);
                 }
 
@@ -134,8 +133,7 @@ final class AttributeExtension extends AbstractExtension
                         'is_variadic' => $isVariadic,
                         'is_safe' => $attribute->isSafe,
                         'is_safe_callback' => $attribute->isSafeCallback,
-                        'deprecated' => $attribute->deprecated,
-                        'alternative' => $attribute->alternative,
+                        'deprecation_info' => $attribute->deprecationInfo,
                     ]);
                 }
 
@@ -150,8 +148,7 @@ final class AttributeExtension extends AbstractExtension
 
                     $tests[$name] = new TwigTest($name, [$objectOrClass, $method->getName()], [
                         'is_variadic' => $isVariadic,
-                        'deprecated' => $attribute->deprecated,
-                        'alternative' => $attribute->alternative,
+                        'deprecation_info' => $attribute->deprecationInfo,
                     ]);
                 }
             }

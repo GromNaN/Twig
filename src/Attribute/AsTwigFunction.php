@@ -11,6 +11,7 @@
 
 namespace Twig\Attribute;
 
+use Twig\DeprecatedCallableInfo;
 use Twig\Node\Node;
 use Twig\TwigFunction;
 
@@ -51,15 +52,7 @@ final class AsTwigFunction
          */
         public ?string $isSafeCallback = null,
 
-        /**
-         * Set to true if the function is deprecated.
-         */
-        public bool|string $deprecated = false,
-
-        /**
-         * The alternative function name to suggest when the deprecated function is called.
-         */
-        public ?string $alternative = null,
+        public ?DeprecatedCallableInfo $deprecationInfo = null,
     ) {
     }
 }

@@ -6,6 +6,7 @@ use Twig\Attribute\AsTwigExtension;
 use Twig\Attribute\AsTwigFilter;
 use Twig\Attribute\AsTwigFunction;
 use Twig\Attribute\AsTwigTest;
+use Twig\DeprecatedCallableInfo;
 use Twig\Environment;
 
 #[AsTwigExtension]
@@ -41,7 +42,7 @@ class ExtensionWithAttributes
     {
     }
 
-    #[AsTwigFilter('deprecated_filter', deprecated: true, alternative: 'bar')]
+    #[AsTwigFilter('deprecated_filter', deprecationInfo: new DeprecatedCallableInfo('foo/bar', '1.2'))]
     public function deprecatedFilter(string $string)
     {
     }
@@ -81,7 +82,7 @@ class ExtensionWithAttributes
     {
     }
 
-    #[AsTwigFunction('deprecated_function', deprecated: true, alternative: 'bar')]
+    #[AsTwigFunction('deprecated_function', deprecationInfo: new DeprecatedCallableInfo('foo/bar', '1.2'))]
     public function deprecatedFunction(string $string)
     {
     }
@@ -96,7 +97,7 @@ class ExtensionWithAttributes
     {
     }
 
-    #[AsTwigTest('deprecated_test', deprecated: true, alternative: 'bar')]
+    #[AsTwigTest('deprecated_test', deprecationInfo: new DeprecatedCallableInfo('foo/bar', '1.2'))]
     public function deprecatedTest(string $string)
     {
     }
