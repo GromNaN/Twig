@@ -13,12 +13,17 @@ use Twig\Environment;
 class ExtensionWithAttributes
 {
     #[AsTwigFilter(name: 'foo', isSafe: ['html'])]
-    public function fooFilter(string $string)
+    public function fooFilter(string|int $string)
     {
     }
 
     #[AsTwigFilter('with_context_filter')]
     public function withContextFilter(array $context, string $string)
+    {
+    }
+
+    #[AsTwigFilter('no_context_filter')]
+    public function noContextFilter($context)
     {
     }
 
@@ -28,12 +33,7 @@ class ExtensionWithAttributes
     }
 
     #[AsTwigFilter('with_env_and_context_filter')]
-    public function withEnvAndContextFilter(Environment $env, array $context, string $string)
-    {
-    }
-
-    #[AsTwigFilter('no_arg_filter')]
-    public function noArgFilter()
+    public function withEnvAndContextFilter(Environment $env, array $context, array $data)
     {
     }
 
@@ -53,12 +53,17 @@ class ExtensionWithAttributes
     }
 
     #[AsTwigFunction(name: 'foo', isSafe: ['html'])]
-    public function fooFunction(string $string)
+    public function fooFunction(string|int $string)
     {
     }
 
     #[AsTwigFunction('with_context_function')]
     public function withContextFunction(array $context, string $string)
+    {
+    }
+
+    #[AsTwigFunction('no_context_function')]
+    public function noContextFunction($context)
     {
     }
 
@@ -88,17 +93,17 @@ class ExtensionWithAttributes
     }
 
     #[AsTwigTest(name: 'foo')]
-    public function fooTest(string $string)
+    public function fooTest(string|int $value)
     {
     }
 
     #[AsTwigTest('variadic_test')]
-    public function variadicTest(string ...$strings)
+    public function variadicTest(string ...$value)
     {
     }
 
     #[AsTwigTest('deprecated_test', deprecationInfo: new DeprecatedCallableInfo('foo/bar', '1.2'))]
-    public function deprecatedTest(string $string)
+    public function deprecatedTest($value, $argument)
     {
     }
 }

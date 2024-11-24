@@ -5,6 +5,8 @@ namespace Twig\Tests\Extension;
 use PHPUnit\Framework\TestCase;
 use Twig\DeprecatedCallableInfo;
 use Twig\Extension\AttributeExtension;
+use Twig\Tests\Extension\Fixtures\FilterWithoutValue;
+use Twig\Tests\Extension\Fixtures\TestWithoutValue;
 use Twig\Tests\Extension\Fixtures\ExtensionWithAttributes;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
@@ -39,8 +41,8 @@ class AttributeExtensionTest extends TestCase
         yield 'with name' => ['foo', 'fooFilter', ['is_safe' => ['html']]];
         yield 'with env' => ['with_env_filter', 'withEnvFilter', ['needs_environment' => true]];
         yield 'with context' => ['with_context_filter', 'withContextFilter', ['needs_context' => true]];
+        yield 'no context' => ['no_context_filter', 'noContextFilter', []];
         yield 'with env and context' => ['with_env_and_context_filter', 'withEnvAndContextFilter', ['needs_environment' => true, 'needs_context' => true]];
-        yield 'no argument' => ['no_arg_filter', 'noArgFilter', []];
         yield 'variadic' => ['variadic_filter', 'variadicFilter', ['is_variadic' => true]];
         yield 'deprecated' => ['deprecated_filter', 'deprecatedFilter', ['deprecation_info' => new DeprecatedCallableInfo('foo/bar', '1.2')]];
         yield 'pattern' => ['pattern_*_filter', 'patternFilter', []];
@@ -69,6 +71,7 @@ class AttributeExtensionTest extends TestCase
         yield 'with name' => ['foo', 'fooFunction', ['is_safe' => ['html']]];
         yield 'with env' => ['with_env_function', 'withEnvFunction', ['needs_environment' => true]];
         yield 'with context' => ['with_context_function', 'withContextFunction', ['needs_context' => true]];
+        yield 'no context' => ['no_context_function', 'noContextFunction', []];
         yield 'with env and context' => ['with_env_and_context_function', 'withEnvAndContextFunction', ['needs_environment' => true, 'needs_context' => true]];
         yield 'no argument' => ['no_arg_function', 'noArgFunction', []];
         yield 'variadic' => ['variadic_function', 'variadicFunction', ['is_variadic' => true]];
@@ -108,5 +111,35 @@ class AttributeExtensionTest extends TestCase
         $this->assertSame([$class, 'fooFilter'], $extension->getFilters()[0]->getCallable());
         $this->assertSame([$class, 'fooFunction'], $extension->getFunctions()[0]->getCallable());
         $this->assertSame([$class, 'fooTest'], $extension->getTests()[0]->getCallable());
+    }
+
+    public function testTwigExtensionAttributeIsRequired()
+    {
+        $extension = new AttributeExtension([self::class]);
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage(sprintf('Extension class "%s" must have the attribute "#[Twig\Attribute\AsTwigExtension]" in order to use attributes', self::class));
+
+        $extension->getFilters();
+    }
+
+    public function testFilterRequireOneArgument()
+    {
+        $extension = new AttributeExtension([FilterWithoutValue::class]);
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('The method "'.FilterWithoutValue::class.'::myFilter()" class must have at least one argument for the value to filter');
+
+        $extension->getTests();
+    }
+
+    public function testTestRequireOneArgument()
+    {
+        $extension = new AttributeExtension([TestWithoutValue::class]);
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('The method "'.TestWithoutValue::class.'::myTest()" class must have at least one argument for the value to test');
+
+        $extension->getTests();
     }
 }

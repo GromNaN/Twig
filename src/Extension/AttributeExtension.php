@@ -38,7 +38,7 @@ final class AttributeExtension extends AbstractExtension
      * A list of objects or class names defining filters, functions, and tests using PHP attributes.
      * When passing a class name, it must be available in runtimes.
      *
-     * @param class-string[]
+     * @param list<object|class-string> $classes
      */
     public function __construct(array $classes)
     {
@@ -77,15 +77,10 @@ final class AttributeExtension extends AbstractExtension
         $filters = $functions = $tests = [];
 
         foreach ($this->classes as $objectOrClass) {
-            try {
-                $reflectionClass = new \ReflectionClass($objectOrClass);
-            } catch (\ReflectionException $e) {
-                throw new \LogicException(sprintf('"%s" class requires a list of objects or class name, "%s" given.', __CLASS__, get_debug_type($objectOrClass)), 0, $e);
-            }
-
+            $reflectionClass = new \ReflectionClass($objectOrClass);
             $attributes = $reflectionClass->getAttributes(AsTwigExtension::class);
             if (!$attributes) {
-                throw new \LogicException(sprintf('Extension class "%s" must have the attribute "%s" in order to use attributes', is_string($objectOrClass) ? $objectOrClass : get_debug_type($objectOrClass), AsTwigExtension::class));
+                throw new \LogicException(sprintf('Extension class "%s" must have the attribute "#[%s]" in order to use attributes.', $reflectionClass->getName(), AsTwigExtension::class));
             }
 
             foreach ($reflectionClass->getMethods() as $method) {
@@ -96,11 +91,19 @@ final class AttributeExtension extends AbstractExtension
 
                     $name = $attribute->name;
                     $parameters = $method->getParameters();
-                    $needsEnvironment = isset($parameters[0]) && Environment::class === $parameters[0]->getType()?->getName();
+                    $needsEnvironment = isset($parameters[0])
+                        && $parameters[0]->getType() instanceof \ReflectionNamedType
+                        && Environment::class === $parameters[0]->getType()->getName();
                     $firstParam = $needsEnvironment ? 1 : 0;
-                    $needsContext = isset($parameters[$firstParam]) && 'context' === $parameters[$firstParam]->getName() && 'array' === $parameters[$firstParam]->getType()?->getName();
+                    $needsContext = isset($parameters[$firstParam])
+                        && 'context' === $parameters[$firstParam]->getName()
+                        && $parameters[$firstParam]->getType() instanceof \ReflectionNamedType
+                        && 'array' === $parameters[$firstParam]->getType()->getName();
                     $firstParam += $needsContext ? 1 : 0;
-                    $isVariadic = isset($parameters[$firstParam]) && end($parameters)->isVariadic();
+                    if (!isset($parameters[$firstParam])) {
+                        throw new \LogicException(sprintf('The method "%s::%s()" class must have at least one argument for the value to filter.', $reflectionClass->getName(), $method->getName()));
+                    }
+                    $isVariadic = end($parameters)->isVariadic();
 
                     $filters[$name] = new TwigFilter($name, [$objectOrClass, $method->getName()], [
                         'needs_environment' => $needsEnvironment,
@@ -121,11 +124,16 @@ final class AttributeExtension extends AbstractExtension
 
                     $name = $attribute->name;
                     $parameters = $method->getParameters();
-                    $needsEnvironment = isset($parameters[0]) && Environment::class === $parameters[0]->getType()?->getName();
+                    $needsEnvironment = isset($parameters[0])
+                        && $parameters[0]->getType() instanceof \ReflectionNamedType
+                        && Environment::class === $parameters[0]->getType()->getName();
                     $firstParam = $needsEnvironment ? 1 : 0;
-                    $needsContext = isset($parameters[$firstParam]) && 'context' === $parameters[$firstParam]->getName() && 'array' === $parameters[$firstParam]->getType()?->getName();
+                    $needsContext = isset($parameters[$firstParam])
+                        && $parameters[$firstParam]->getType() instanceof \ReflectionNamedType
+                        && 'array' === $parameters[$firstParam]->getType()->getName();
                     $firstParam += $needsContext ? 1 : 0;
-                    $isVariadic = isset($parameters[$firstParam]) && end($parameters)->isVariadic();
+                    $isVariadic = isset($parameters[$firstParam])
+                        && end($parameters)->isVariadic();
 
                     $functions[$name] = new TwigFunction($name, [$objectOrClass, $method->getName()], [
                         'needs_environment' => $needsEnvironment,
@@ -144,7 +152,10 @@ final class AttributeExtension extends AbstractExtension
 
                     $name = $attribute->name;
                     $parameters = $method->getParameters();
-                    $isVariadic = isset($parameters[$firstParam]) && end($parameters)->isVariadic();
+                    if (count($parameters) < 1) {
+                        throw new \LogicException(sprintf('The method "%s::%s()" class must have at least one argument for the value to test.', $reflectionClass->getName(), $method->getName()));
+                    }
+                    $isVariadic = end($parameters)->isVariadic();
 
                     $tests[$name] = new TwigTest($name, [$objectOrClass, $method->getName()], [
                         'is_variadic' => $isVariadic,

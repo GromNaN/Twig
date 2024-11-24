@@ -17,26 +17,25 @@ use Twig\TwigTest;
 /**
  * Registers a method as template test.
  *
- * If the first argument of the method has Twig\Environment type-hint, the test will receive the current environment.
- * If the next argument of the method is named $context and has array type-hint, the test will receive the current context.
- * The last argument of the method is the value to be tested, if any.
+ * The first argument is the value to test and the other arguments are the
+ * arguments passed to the test in the template.
  *
  *     #[AsTwigTest('foo')]
- *     public function fooTest(Environment $env, array $context, $value, $arg1 = null) { ... }
+ *     public function fooTest($value, $arg1 = null) { ... }
+ *
+ *     {% if value is foo(arg1) %}
  *
  * @see TwigTest
  */
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 final class AsTwigTest
 {
+    /**
+     * @param non-empty-string $name The name of the test in Twig.
+     * @param DeprecatedCallableInfo|null $deprecationInfo Information about the deprecation
+     */
     public function __construct(
-        /**
-         * The name of the filter in Twig.
-         *
-         * @var non-empty-string $name
-         */
         public string $name,
-
         public ?DeprecatedCallableInfo $deprecationInfo = null,
     ) {
     }
