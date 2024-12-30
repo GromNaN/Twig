@@ -11,7 +11,6 @@
 
 namespace Twig\Extension;
 
-use Twig\Attribute\AsTwigExtension;
 use Twig\Attribute\AsTwigFilter;
 use Twig\Attribute\AsTwigFunction;
 use Twig\Attribute\AsTwigTest;
@@ -78,10 +77,6 @@ final class AttributeExtension extends AbstractExtension
 
         foreach ($this->classes as $objectOrClass) {
             $reflectionClass = new \ReflectionClass($objectOrClass);
-            $attributes = $reflectionClass->getAttributes(AsTwigExtension::class);
-            if (!$attributes) {
-                throw new \LogicException(sprintf('Extension class "%s" must have the attribute "#[%s]" in order to use attributes.', $reflectionClass->getName(), AsTwigExtension::class));
-            }
 
             foreach ($reflectionClass->getMethods() as $method) {
                 // Filters

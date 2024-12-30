@@ -113,16 +113,6 @@ class AttributeExtensionTest extends TestCase
         $this->assertSame([$class, 'fooTest'], $extension->getTests()[0]->getCallable());
     }
 
-    public function testTwigExtensionAttributeIsRequired()
-    {
-        $extension = new AttributeExtension([self::class]);
-
-        $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage(sprintf('Extension class "%s" must have the attribute "#[Twig\Attribute\AsTwigExtension]" in order to use attributes', self::class));
-
-        $extension->getFilters();
-    }
-
     public function testFilterRequireOneArgument()
     {
         $extension = new AttributeExtension([FilterWithoutValue::class]);

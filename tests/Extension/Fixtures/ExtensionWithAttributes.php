@@ -9,7 +9,6 @@ use Twig\Attribute\AsTwigTest;
 use Twig\DeprecatedCallableInfo;
 use Twig\Environment;
 
-#[AsTwigExtension]
 class ExtensionWithAttributes
 {
     #[AsTwigFilter(name: 'foo', isSafe: ['html'])]

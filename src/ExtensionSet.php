@@ -432,16 +432,10 @@ final class ExtensionSet
         $this->unaryOperators = [];
         $this->binaryOperators = [];
 
-        $classes = [];
         foreach ($this->extensions as $extension) {
-            if ($extension instanceof ExtensionInterface) {
-                $this->initExtension($extension);
-            } else {
-                $classes[] = $extension;
-            }
+            $this->initExtension($extension);
         }
 
-        $this->initExtension(new AttributeExtension($classes));
         $this->initExtension($this->staging);
         // Done at the end only, so that an exception during initialization does not mark the environment as initialized when catching the exception
         $this->initialized = true;
