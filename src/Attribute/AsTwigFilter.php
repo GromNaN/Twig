@@ -46,6 +46,7 @@ final class AsTwigFilter
      */
     public function __construct(
         public string $name,
+        public ?bool $needsEnvironment = null,
         public bool $needsCharset = false,
         public bool $needsContext = false,
         public ?array $isSafe = null,

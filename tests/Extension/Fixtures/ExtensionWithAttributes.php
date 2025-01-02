@@ -2,7 +2,6 @@
 
 namespace Twig\Tests\Extension\Fixtures;
 
-use Twig\Attribute\AsTwigExtension;
 use Twig\Attribute\AsTwigFilter;
 use Twig\Attribute\AsTwigFunction;
 use Twig\Attribute\AsTwigTest;

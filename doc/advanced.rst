@@ -816,21 +816,19 @@ The ``getTests()`` method lets you add new test functions::
 Using PHP Attributes to define extensions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. versionadded:: 3.9
+.. versionadded:: 3.19
 
-    The attribute classes were added in Twig 3.9.
+    The attribute classes were added in Twig 3.19.
 
-From PHP 8.0, you can use the attributes ``#[AsTwigFilter]``, ``#[AsTwigFunction]``,
-and ``#[AsTwigTest]`` on any method of any class to define filters, functions, and tests.
+You can use the attributes ``#[AsTwigFilter]``, ``#[AsTwigFunction]``, and
+``#[AsTwigTest]`` on any method of any class to define filters, functions, and tests.
 
-Create a class with the attribute ``#[AsTwigExtension]``::
+Create a class using this attributes::
 
-    use Twig\Attribute\AsTwigExtension;
     use Twig\Attribute\AsTwigFilter;
     use Twig\Attribute\AsTwigFunction;
     use Twig\Attribute\AsTwigTest;
 
-    #[AsTwigExtension]
     class ProjectExtension
     {
         #[AsTwigFilter('rot13')]
@@ -857,17 +855,15 @@ Then register the extension class::
     $twig = new \Twig\Environment($loader);
     $twig->addExtension(ProjectExtension::class);
 
-If all the methods are static, you are done. The ``Project_Twig_Extension`` class will
+If all the methods are static, you are done. The ``ProjectExtension`` class will
 never be instantiated and the class attributes will be scanned only when a template
 is compiled.
 
 Otherwise, if some methods are not static, you need to register the class as
 a runtime extension using one of the runtime loaders::
 
-    use Twig\Attribute\AsTwigExtension;
     use Twig\Attribute\AsTwigFunction;
 
-    #[AsTwigExtension]
     class ProjectExtension
     {
         // Inject hypothetical dependencies
@@ -896,11 +892,9 @@ Or use the instance directly if you don't need lazy-loading::
 ``#[AsTwigFilter]`` and ``#[AsTwigFunction]`` support ``isSafe``, ``preEscape``, and
 ``isVariadic`` options::
 
-    use Twig\Attribute\AsTwigExtension;
     use Twig\Attribute\AsTwigFilter;
     use Twig\Attribute\AsTwigFunction;
 
-    #[AsTwigExtension]
     class ProjectExtension
     {
         #[AsTwigFilter('rot13', isSafe: ['html'])]
@@ -933,7 +927,7 @@ with type and name ``array $context`` first or after ``\Twig\Environment``::
 
     class ProjectExtension
     {
-        #[AsTwigFunction('lipsum')]
+        #[AsTwigFunction('lipsum', needContext: true)]
         public function lipsum(array $context, int $count): string
         {
             // ...

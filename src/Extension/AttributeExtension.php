@@ -84,7 +84,7 @@ final class AttributeExtension extends AbstractExtension
                     $attribute = $reflectionAttribute->newInstance();
 
                     $callable = new TwigFilter($attribute->name, [$objectOrClass, $method->getName()], [
-                        'needs_environment' => $this->needsEnvironment($method),
+                        'needs_environment' => $attribute->needsEnvironment ?? $this->needsEnvironment($method),
                         'needs_context' => $attribute->needsContext,
                         'needs_charset' => $attribute->needsCharset,
                         'is_variadic' => $method->isVariadic(),
@@ -107,7 +107,7 @@ final class AttributeExtension extends AbstractExtension
                     $attribute = $reflectionAttribute->newInstance();
 
                     $callable = new TwigFunction($attribute->name, [$objectOrClass, $method->getName()], [
-                        'needs_environment' => $this->needsEnvironment($method),
+                        'needs_environment' => $attribute->needsEnvironment ?? $this->needsEnvironment($method),
                         'needs_context' => $attribute->needsContext,
                         'needs_charset' => $attribute->needsCharset,
                         'is_variadic' => $method->isVariadic(),
@@ -129,7 +129,7 @@ final class AttributeExtension extends AbstractExtension
                     $attribute = $reflectionAttribute->newInstance();
 
                     $callable = new TwigTest($attribute->name, [$objectOrClass, $method->getName()], [
-                        'needs_environment' => $this->needsEnvironment($method),
+                        'needs_environment' => $attribute->needsEnvironment ?? $this->needsEnvironment($method),
                         'needs_context' => $attribute->needsContext,
                         'needs_charset' => $attribute->needsCharset,
                         'is_variadic' => $method->isVariadic(),
@@ -151,6 +151,9 @@ final class AttributeExtension extends AbstractExtension
         $this->tests = array_values($tests);
     }
 
+    /**
+     * Detect if the first argument of the method is the environment.
+     */
     private function needsEnvironment(\ReflectionFunctionAbstract $function): bool
     {
         if (!$parameters = $function->getParameters()) {

@@ -23,17 +23,18 @@ class AttributeExtensionTest extends TestCase
      */
     public function testFilter(string $name, string $method, array $options)
     {
-        $object = new ExtensionWithAttributes();
-        $extension = new AttributeExtension([$object]);
-        foreach ($extension->getFilters() as $filter) {
-            if ($filter->getName() === $name) {
-                $this->assertEquals(new TwigFilter($name, [$object, $method], $options), $filter);
-
-                return;
+        foreach ([new ExtensionWithAttributes(), ExtensionWithAttributes::class] as $object) {
+            $found = false;
+            $extension = new AttributeExtension([$object]);
+            foreach ($extension->getFilters() as $filter) {
+                if ($filter->getName() === $name) {
+                    $found = true;
+                    $this->assertEquals(new TwigFilter($name, [$object, $method], $options), $filter);
+                }
             }
-        }
 
-        $this->fail(sprintf('Filter "%s" is not registered.', $name));
+            $this->assertTrue($found, sprintf('Filter "%s" is not registered.', $name));
+        }
     }
 
     public static function provideFilters()
@@ -52,17 +53,18 @@ class AttributeExtensionTest extends TestCase
      */
     public function testFunction(string $name, string $method, array $options)
     {
-        $object = new ExtensionWithAttributes();
-        $extension = new AttributeExtension([$object]);
-        foreach ($extension->getFunctions() as $function) {
-            if ($function->getName() === $name) {
-                $this->assertEquals(new TwigFunction($name, [$object, $method], $options), $function);
-
-                return;
+        foreach ([new ExtensionWithAttributes(), ExtensionWithAttributes::class] as $object) {
+            $found = false;
+            $extension = new AttributeExtension([$object]);
+            foreach ($extension->getFunctions() as $function) {
+                if ($function->getName() === $name) {
+                    $found = true;
+                    $this->assertEquals(new TwigFunction($name, [$object, $method], $options), $function);
+                }
             }
-        }
 
-        $this->fail(sprintf('Function "%s" is not registered.', $name));
+            $this->assertTrue($found, sprintf('Function "%s" is not registered.', $name));
+        }
     }
 
     public static function provideFunctions()
@@ -81,17 +83,18 @@ class AttributeExtensionTest extends TestCase
      */
     public function testTest(string $name, string $method, array $options)
     {
-        $object = new ExtensionWithAttributes();
-        $extension = new AttributeExtension([$object]);
-        foreach ($extension->getTests() as $test) {
-            if ($test->getName() === $name) {
-                $this->assertEquals(new TwigTest($name, [$object, $method], $options), $test);
-
-                return;
+        foreach ([new ExtensionWithAttributes(), ExtensionWithAttributes::class] as $object) {
+            $extension = new AttributeExtension([$object]);
+            foreach ($extension->getTests() as $test) {
+                $found = false;
+                if ($test->getName() === $name) {
+                    $found = true;
+                    $this->assertEquals(new TwigTest($name, [$object, $method], $options), $test);
+                }
             }
-        }
 
-        $this->fail(sprintf('Function "%s" is not registered.', $name));
+            $this->assertTrue($found, sprintf('Test "%s" is not registered.', $name));
+        }
     }
 
     public static function provideTests()
