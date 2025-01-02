@@ -40,9 +40,11 @@ final class AsTwigFunction
      */
     public function __construct(
         public string $name,
+        public bool $needsCharset = false,
+        public bool $needsContext = false,
         public ?array $isSafe = null,
         public mixed $isSafeCallback = null,
-        public ?DeprecatedCallableInfo  $deprecationInfo = null,
+        public ?DeprecatedCallableInfo $deprecationInfo = null,
     ) {
     }
 }

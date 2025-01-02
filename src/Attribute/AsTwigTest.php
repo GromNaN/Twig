@@ -36,6 +36,8 @@ final class AsTwigTest
      */
     public function __construct(
         public string $name,
+        public bool $needsCharset = false,
+        public bool $needsContext = false,
         public ?DeprecatedCallableInfo $deprecationInfo = null,
     ) {
     }

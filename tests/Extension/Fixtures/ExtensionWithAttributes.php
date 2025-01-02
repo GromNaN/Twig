@@ -16,13 +16,8 @@ class ExtensionWithAttributes
     {
     }
 
-    #[AsTwigFilter('with_context_filter')]
+    #[AsTwigFilter('with_context_filter', needsContext: true)]
     public function withContextFilter(array $context, string $string)
-    {
-    }
-
-    #[AsTwigFilter('no_context_filter')]
-    public function noContextFilter($context)
     {
     }
 
@@ -31,7 +26,7 @@ class ExtensionWithAttributes
     {
     }
 
-    #[AsTwigFilter('with_env_and_context_filter')]
+    #[AsTwigFilter('with_env_and_context_filter', needsContext: true)]
     public function withEnvAndContextFilter(Environment $env, array $context, array $data)
     {
     }
@@ -56,13 +51,8 @@ class ExtensionWithAttributes
     {
     }
 
-    #[AsTwigFunction('with_context_function')]
+    #[AsTwigFunction('with_context_function', needsContext: true)]
     public function withContextFunction(array $context, string $string)
-    {
-    }
-
-    #[AsTwigFunction('no_context_function')]
-    public function noContextFunction($context)
     {
     }
 
@@ -71,7 +61,7 @@ class ExtensionWithAttributes
     {
     }
 
-    #[AsTwigFunction('with_env_and_context_function')]
+    #[AsTwigFunction('with_env_and_context_function', needsContext: true)]
     public function withEnvAndContextFunction(Environment $env, array $context, string $string)
     {
     }
@@ -98,6 +88,21 @@ class ExtensionWithAttributes
 
     #[AsTwigTest('variadic_test')]
     public function variadicTest(string ...$value)
+    {
+    }
+
+    #[AsTwigTest('with_context_test', needsContext: true)]
+    public function withContextTest(array $context, $argument)
+    {
+    }
+
+    #[AsTwigTest('with_env_test')]
+    public function withEnvTest(Environment $env, $argument)
+    {
+    }
+
+    #[AsTwigTest('with_env_and_context_test', needsContext: true)]
+    public function withEnvAndContextTest(Environment $env, array $context, $argument)
     {
     }
 

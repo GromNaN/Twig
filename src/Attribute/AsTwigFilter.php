@@ -13,6 +13,7 @@ namespace Twig\Attribute;
 
 use Twig\DeprecatedCallableInfo;
 use Twig\Node\Node;
+use Twig\TwigCallableInterface;
 use Twig\TwigFilter;
 
 /**
@@ -45,6 +46,8 @@ final class AsTwigFilter
      */
     public function __construct(
         public string $name,
+        public bool $needsCharset = false,
+        public bool $needsContext = false,
         public ?array $isSafe = null,
         public mixed $isSafeCallback = null,
         public ?string $preEscape = null,

@@ -79,83 +79,68 @@ final class AttributeExtension extends AbstractExtension
             $reflectionClass = new \ReflectionClass($objectOrClass);
 
             foreach ($reflectionClass->getMethods() as $method) {
-                // Filters
-                foreach ($method->getAttributes(AsTwigFilter::class) as $attribute) {
+                foreach ($method->getAttributes(AsTwigFilter::class) as $reflectionAttribute) {
                     /** @var AsTwigFilter $attribute */
-                    $attribute = $attribute->newInstance();
+                    $attribute = $reflectionAttribute->newInstance();
 
-                    $name = $attribute->name;
-                    $parameters = $method->getParameters();
-                    $needsEnvironment = isset($parameters[0])
-                        && $parameters[0]->getType() instanceof \ReflectionNamedType
-                        && Environment::class === $parameters[0]->getType()->getName();
-                    $firstParam = $needsEnvironment ? 1 : 0;
-                    $needsContext = isset($parameters[$firstParam])
-                        && 'context' === $parameters[$firstParam]->getName()
-                        && $parameters[$firstParam]->getType() instanceof \ReflectionNamedType
-                        && 'array' === $parameters[$firstParam]->getType()->getName();
-                    $firstParam += $needsContext ? 1 : 0;
-                    if (!isset($parameters[$firstParam])) {
-                        throw new \LogicException(sprintf('The method "%s::%s()" class must have at least one argument for the value to filter.', $reflectionClass->getName(), $method->getName()));
-                    }
-                    $isVariadic = end($parameters)->isVariadic();
-
-                    $filters[$name] = new TwigFilter($name, [$objectOrClass, $method->getName()], [
-                        'needs_environment' => $needsEnvironment,
-                        'needs_context' => $needsContext,
-                        'is_variadic' => $isVariadic,
+                    $callable = new TwigFilter($attribute->name, [$objectOrClass, $method->getName()], [
+                        'needs_environment' => $this->needsEnvironment($method),
+                        'needs_context' => $attribute->needsContext,
+                        'needs_charset' => $attribute->needsCharset,
+                        'is_variadic' => $method->isVariadic(),
                         'is_safe' => $attribute->isSafe,
                         'is_safe_callback' => $attribute->isSafeCallback,
                         'pre_escape' => $attribute->preEscape,
                         'preserves_safety' => $attribute->preservesSafety,
                         'deprecation_info' => $attribute->deprecationInfo,
                     ]);
+
+                    if ($callable->getMinimalNumberOfRequiredArguments() > $method->getNumberOfParameters()) {
+                        throw new \LogicException(sprintf('"%s::%s()" needs at least %d arguments to be used AsTwigFilter, but only %d defined.', $reflectionClass->getName(), $method->getName(), $callable->getMinimalNumberOfRequiredArguments(), $method->getNumberOfParameters()));
+                    }
+
+                    $filters[$attribute->name] = $callable;
                 }
 
-                // Functions
-                foreach ($method->getAttributes(AsTwigFunction::class) as $attribute) {
+                foreach ($method->getAttributes(AsTwigFunction::class) as $reflectionAttribute) {
                     /** @var AsTwigFunction $attribute */
-                    $attribute = $attribute->newInstance();
+                    $attribute = $reflectionAttribute->newInstance();
 
-                    $name = $attribute->name;
-                    $parameters = $method->getParameters();
-                    $needsEnvironment = isset($parameters[0])
-                        && $parameters[0]->getType() instanceof \ReflectionNamedType
-                        && Environment::class === $parameters[0]->getType()->getName();
-                    $firstParam = $needsEnvironment ? 1 : 0;
-                    $needsContext = isset($parameters[$firstParam])
-                        && $parameters[$firstParam]->getType() instanceof \ReflectionNamedType
-                        && 'array' === $parameters[$firstParam]->getType()->getName();
-                    $firstParam += $needsContext ? 1 : 0;
-                    $isVariadic = isset($parameters[$firstParam])
-                        && end($parameters)->isVariadic();
-
-                    $functions[$name] = new TwigFunction($name, [$objectOrClass, $method->getName()], [
-                        'needs_environment' => $needsEnvironment,
-                        'needs_context' => $needsContext,
-                        'is_variadic' => $isVariadic,
+                    $callable = new TwigFunction($attribute->name, [$objectOrClass, $method->getName()], [
+                        'needs_environment' => $this->needsEnvironment($method),
+                        'needs_context' => $attribute->needsContext,
+                        'needs_charset' => $attribute->needsCharset,
+                        'is_variadic' => $method->isVariadic(),
                         'is_safe' => $attribute->isSafe,
                         'is_safe_callback' => $attribute->isSafeCallback,
                         'deprecation_info' => $attribute->deprecationInfo,
                     ]);
+
+                    if ($callable->getMinimalNumberOfRequiredArguments() > $method->getNumberOfParameters()) {
+                        throw new \LogicException(sprintf('"%s::%s()" needs at least %d arguments to be used AsTwigFunction, but only %d defined.', $reflectionClass->getName(), $method->getName(), $callable->getMinimalNumberOfRequiredArguments(), $method->getNumberOfParameters()));
+                    }
+
+                    $functions[$attribute->name] = $callable;
                 }
 
-                // Tests
-                foreach ($method->getAttributes(AsTwigTest::class) as $attribute) {
+                foreach ($method->getAttributes(AsTwigTest::class) as $reflectionAttribute) {
+
                     /** @var AsTwigTest $attribute */
-                    $attribute = $attribute->newInstance();
+                    $attribute = $reflectionAttribute->newInstance();
 
-                    $name = $attribute->name;
-                    $parameters = $method->getParameters();
-                    if (count($parameters) < 1) {
-                        throw new \LogicException(sprintf('The method "%s::%s()" class must have at least one argument for the value to test.', $reflectionClass->getName(), $method->getName()));
-                    }
-                    $isVariadic = end($parameters)->isVariadic();
-
-                    $tests[$name] = new TwigTest($name, [$objectOrClass, $method->getName()], [
-                        'is_variadic' => $isVariadic,
+                    $callable = new TwigTest($attribute->name, [$objectOrClass, $method->getName()], [
+                        'needs_environment' => $this->needsEnvironment($method),
+                        'needs_context' => $attribute->needsContext,
+                        'needs_charset' => $attribute->needsCharset,
+                        'is_variadic' => $method->isVariadic(),
                         'deprecation_info' => $attribute->deprecationInfo,
                     ]);
+
+                    if ($callable->getMinimalNumberOfRequiredArguments() > $method->getNumberOfParameters()) {
+                        throw new \LogicException(sprintf('"%s::%s()" needs at least %d arguments to be used AsTwigTest, but only %d defined.', $reflectionClass->getName(), $method->getName(), $callable->getMinimalNumberOfRequiredArguments(), $method->getNumberOfParameters()));
+                    }
+
+                    $tests[$attribute->name] = $callable;
                 }
             }
         }
@@ -164,5 +149,16 @@ final class AttributeExtension extends AbstractExtension
         $this->filters = array_values($filters);
         $this->functions = array_values($functions);
         $this->tests = array_values($tests);
+    }
+
+    private function needsEnvironment(\ReflectionFunctionAbstract $function): bool
+    {
+        if (!$parameters = $function->getParameters()) {
+            return false;
+        }
+
+        return $parameters[0]->getType() instanceof \ReflectionNamedType
+            && Environment::class === $parameters[0]->getType()->getName()
+            && !$parameters[0]->isVariadic();
     }
 }
