@@ -84,9 +84,9 @@ class AttributeExtensionTest extends TestCase
     public function testTest(string $name, string $method, array $options)
     {
         foreach ([new ExtensionWithAttributes(), ExtensionWithAttributes::class] as $object) {
+            $found = false;
             $extension = new AttributeExtension([$object]);
             foreach ($extension->getTests() as $test) {
-                $found = false;
                 if ($test->getName() === $name) {
                     $found = true;
                     $this->assertEquals(new TwigTest($name, [$object, $method], $options), $test);
@@ -122,7 +122,7 @@ class AttributeExtensionTest extends TestCase
         $extension = new AttributeExtension([FilterWithoutValue::class]);
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('"'.FilterWithoutValue::class.'::myFilter()" needs at least 1 arguments to be used AsTwigFilter, but only 0 defined.');
+        $this->expectExceptionMessage('"'.FilterWithoutValue::class.'::myFilter()" needs at least 1 arguments to be used Twig\Attribute\AsTwigFilter, but only 0 defined.');
 
         $extension->getTests();
     }
@@ -132,7 +132,7 @@ class AttributeExtensionTest extends TestCase
         $extension = new AttributeExtension([TestWithoutValue::class]);
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('"'.TestWithoutValue::class.'::myTest()" needs at least 1 arguments to be used AsTwigTest, but only 0 defined.');
+        $this->expectExceptionMessage('"'.TestWithoutValue::class.'::myTest()" needs at least 1 arguments to be used Twig\Attribute\AsTwigTest, but only 0 defined.');
 
         $extension->getTests();
     }

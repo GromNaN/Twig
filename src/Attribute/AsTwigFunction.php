@@ -30,7 +30,7 @@ use Twig\TwigFunction;
  * @see TwigFunction
  */
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
-final class AsTwigFunction
+final class AsTwigFunction extends AsTwigCallable
 {
     /**
      * @param non-empty-string $name The name of the function in Twig.
@@ -47,5 +47,18 @@ final class AsTwigFunction
         public mixed $isSafeCallback = null,
         public ?DeprecatedCallableInfo $deprecationInfo = null,
     ) {
+    }
+
+    public function getTwigCallable(array|string|\Closure $callable, \ReflectionFunctionAbstract $function): TwigFunction
+    {
+        return new TwigFunction($this->name, $callable, [
+            'needs_environment' => $this->needsEnvironment ?? $this->needsEnvironment($function),
+            'needs_context' => $this->needsContext,
+            'needs_charset' => $this->needsCharset,
+            'is_variadic' => $function->isVariadic(),
+            'is_safe' => $this->isSafe,
+            'is_safe_callback' => $this->isSafeCallback,
+            'deprecation_info' => $this->deprecationInfo,
+        ]);
     }
 }

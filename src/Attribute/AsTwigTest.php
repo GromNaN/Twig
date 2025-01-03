@@ -28,7 +28,7 @@ use Twig\TwigTest;
  * @see TwigTest
  */
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
-final class AsTwigTest
+final class AsTwigTest extends AsTwigCallable
 {
     /**
      * @param non-empty-string $name The name of the test in Twig.
@@ -41,5 +41,16 @@ final class AsTwigTest
         public bool $needsContext = false,
         public ?DeprecatedCallableInfo $deprecationInfo = null,
     ) {
+    }
+
+    public function getTwigCallable(array|string|\Closure $callable, \ReflectionFunctionAbstract $function): TwigTest
+    {
+        return new TwigTest($this->name, $callable, [
+            'needs_environment' => $this->needsEnvironment ?? $this->needsEnvironment($function),
+            'needs_context' => $this->needsContext,
+            'needs_charset' => $this->needsCharset,
+            'is_variadic' => $function->isVariadic(),
+            'deprecation_info' => $this->deprecationInfo,
+        ]);
     }
 }

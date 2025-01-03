@@ -11,10 +11,7 @@
 
 namespace Twig\Extension;
 
-use Twig\Attribute\AsTwigFilter;
-use Twig\Attribute\AsTwigFunction;
-use Twig\Attribute\AsTwigTest;
-use Twig\Environment;
+use Twig\Attribute\AsTwigCallable;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 use Twig\TwigTest;
@@ -23,15 +20,11 @@ use Twig\TwigTest;
  * Define Twig filters, functions, and tests with PHP attributes.
  *
  * @author Jérôme Tamarelle <jerome@tamarelle.net>
- *
- * @internal
  */
 final class AttributeExtension extends AbstractExtension
 {
     private array $classes;
-    private array $filters;
-    private array $functions;
-    private array $tests;
+    private array $callables;
 
     /**
      * A list of objects or class names defining filters, functions, and tests using PHP attributes.
@@ -46,122 +39,72 @@ final class AttributeExtension extends AbstractExtension
 
     public function getFilters(): array
     {
-        if (!isset($this->filters)) {
+        if (!isset($this->callables)) {
             $this->initFromAttributes();
         }
 
-        return $this->filters;
+        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigFilter));
     }
 
     public function getFunctions(): array
     {
-        if (!isset($this->functions)) {
+        if (!isset($this->callables)) {
             $this->initFromAttributes();
         }
 
-        return $this->functions;
+        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigFunction));
     }
 
     public function getTests(): array
     {
-        if (!isset($this->tests)) {
+        if (!isset($this->callables)) {
             $this->initFromAttributes();
         }
 
-        return $this->tests;
+        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigTest));
     }
 
     private function initFromAttributes()
     {
-        $filters = $functions = $tests = [];
+        $callables = [];
 
         foreach ($this->classes as $objectOrClass) {
             $reflectionClass = new \ReflectionClass($objectOrClass);
-
-            foreach ($reflectionClass->getMethods() as $method) {
-                foreach ($method->getAttributes(AsTwigFilter::class) as $reflectionAttribute) {
-                    /** @var AsTwigFilter $attribute */
+            foreach ($reflectionClass->getMethods() as $reflectionMethod) {
+                foreach ($reflectionMethod->getAttributes(AsTwigCallable::class, \ReflectionAttribute::IS_INSTANCEOF) as $reflectionAttribute) {
                     $attribute = $reflectionAttribute->newInstance();
+                    assert($attribute instanceof AsTwigCallable);
+                    $callable = $attribute->getTwigCallable([$objectOrClass, $reflectionMethod->getName()], $reflectionMethod);
 
-                    $callable = new TwigFilter($attribute->name, [$objectOrClass, $method->getName()], [
-                        'needs_environment' => $attribute->needsEnvironment ?? $this->needsEnvironment($method),
-                        'needs_context' => $attribute->needsContext,
-                        'needs_charset' => $attribute->needsCharset,
-                        'is_variadic' => $method->isVariadic(),
-                        'is_safe' => $attribute->isSafe,
-                        'is_safe_callback' => $attribute->isSafeCallback,
-                        'pre_escape' => $attribute->preEscape,
-                        'preserves_safety' => $attribute->preservesSafety,
-                        'deprecation_info' => $attribute->deprecationInfo,
-                    ]);
-
-                    if ($callable->getMinimalNumberOfRequiredArguments() > $method->getNumberOfParameters()) {
-                        throw new \LogicException(sprintf('"%s::%s()" needs at least %d arguments to be used AsTwigFilter, but only %d defined.', $reflectionClass->getName(), $method->getName(), $callable->getMinimalNumberOfRequiredArguments(), $method->getNumberOfParameters()));
+                    if ($callable->getMinimalNumberOfRequiredArguments() > $reflectionMethod->getNumberOfParameters()) {
+                        throw new \LogicException(sprintf('"%s::%s()" needs at least %d arguments to be used %s, but only %d defined.',
+                            $reflectionClass->getName(),
+                            $reflectionMethod->getName(),
+                            $callable->getMinimalNumberOfRequiredArguments(),
+                            $reflectionAttribute->getName(),
+                            $reflectionMethod->getNumberOfParameters(),
+                        ));
                     }
 
-                    $filters[$attribute->name] = $callable;
-                }
-
-                foreach ($method->getAttributes(AsTwigFunction::class) as $reflectionAttribute) {
-                    /** @var AsTwigFunction $attribute */
-                    $attribute = $reflectionAttribute->newInstance();
-
-                    $callable = new TwigFunction($attribute->name, [$objectOrClass, $method->getName()], [
-                        'needs_environment' => $attribute->needsEnvironment ?? $this->needsEnvironment($method),
-                        'needs_context' => $attribute->needsContext,
-                        'needs_charset' => $attribute->needsCharset,
-                        'is_variadic' => $method->isVariadic(),
-                        'is_safe' => $attribute->isSafe,
-                        'is_safe_callback' => $attribute->isSafeCallback,
-                        'deprecation_info' => $attribute->deprecationInfo,
-                    ]);
-
-                    if ($callable->getMinimalNumberOfRequiredArguments() > $method->getNumberOfParameters()) {
-                        throw new \LogicException(sprintf('"%s::%s()" needs at least %d arguments to be used AsTwigFunction, but only %d defined.', $reflectionClass->getName(), $method->getName(), $callable->getMinimalNumberOfRequiredArguments(), $method->getNumberOfParameters()));
-                    }
-
-                    $functions[$attribute->name] = $callable;
-                }
-
-                foreach ($method->getAttributes(AsTwigTest::class) as $reflectionAttribute) {
-
-                    /** @var AsTwigTest $attribute */
-                    $attribute = $reflectionAttribute->newInstance();
-
-                    $callable = new TwigTest($attribute->name, [$objectOrClass, $method->getName()], [
-                        'needs_environment' => $attribute->needsEnvironment ?? $this->needsEnvironment($method),
-                        'needs_context' => $attribute->needsContext,
-                        'needs_charset' => $attribute->needsCharset,
-                        'is_variadic' => $method->isVariadic(),
-                        'deprecation_info' => $attribute->deprecationInfo,
-                    ]);
-
-                    if ($callable->getMinimalNumberOfRequiredArguments() > $method->getNumberOfParameters()) {
-                        throw new \LogicException(sprintf('"%s::%s()" needs at least %d arguments to be used AsTwigTest, but only %d defined.', $reflectionClass->getName(), $method->getName(), $callable->getMinimalNumberOfRequiredArguments(), $method->getNumberOfParameters()));
-                    }
-
-                    $tests[$attribute->name] = $callable;
+                    $callables[] = $callable;
                 }
             }
         }
 
         // Assign all at the end to avoid inconsistent state in case of exception
-        $this->filters = array_values($filters);
-        $this->functions = array_values($functions);
-        $this->tests = array_values($tests);
+        $this->callables = array_values($callables);
     }
 
-    /**
-     * Detect if the first argument of the method is the environment.
-     */
-    private function needsEnvironment(\ReflectionFunctionAbstract $function): bool
+    public function getLastModified(): int
     {
-        if (!$parameters = $function->getParameters()) {
-            return false;
+        $lastModified = filemtime(__FILE__);
+        foreach ($this->classes as $objectOrClass) {
+            $reflectionClass = new \ReflectionClass($objectOrClass);
+            if (is_file($filename = $reflectionClass->getFileName())) {
+                $lastModified = max($lastModified, filemtime($filename));
+            }
         }
 
-        return $parameters[0]->getType() instanceof \ReflectionNamedType
-            && Environment::class === $parameters[0]->getType()->getName()
-            && !$parameters[0]->isVariadic();
+        return $lastModified;
     }
 }

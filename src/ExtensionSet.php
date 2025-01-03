@@ -12,7 +12,6 @@
 namespace Twig;
 
 use Twig\Error\RuntimeError;
-use Twig\Extension\AttributeExtension;
 use Twig\Extension\ExtensionInterface;
 use Twig\Extension\GlobalsInterface;
 use Twig\Extension\StagingExtension;

@@ -13,7 +13,6 @@ namespace Twig\Attribute;
 
 use Twig\DeprecatedCallableInfo;
 use Twig\Node\Node;
-use Twig\TwigCallableInterface;
 use Twig\TwigFilter;
 
 /**
@@ -31,7 +30,7 @@ use Twig\TwigFilter;
  * @see TwigFilter
  */
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
-final class AsTwigFilter
+final class AsTwigFilter extends AsTwigCallable
 {
     /**
      * @param non-empty-string $name The name of the filter in Twig.
@@ -55,5 +54,20 @@ final class AsTwigFilter
         public ?array $preservesSafety = null,
         public ?DeprecatedCallableInfo $deprecationInfo = null,
     ) {
+    }
+
+    public function getTwigCallable(array|string|\Closure $callable, \ReflectionFunctionAbstract $function): TwigFilter
+    {
+        return new TwigFilter($this->name, $callable, [
+            'needs_environment' => $this->needsEnvironment ?? $this->needsEnvironment($function),
+            'needs_context' => $this->needsContext,
+            'needs_charset' => $this->needsCharset,
+            'is_variadic' => $function->isVariadic(),
+            'is_safe' => $this->isSafe,
+            'is_safe_callback' => $this->isSafeCallback,
+            'pre_escape' => $this->preEscape,
+            'preserves_safety' => $this->preservesSafety,
+            'deprecation_info' => $this->deprecationInfo,
+        ]);
     }
 }
