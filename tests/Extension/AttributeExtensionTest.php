@@ -136,4 +136,22 @@ class AttributeExtensionTest extends TestCase
 
         $extension->getTests();
     }
+
+    public function testLastModified()
+    {
+        $extension = AttributeExtension::createFromClassList([
+            ExtensionWithAttributes::class,
+            new class () {},
+            $this->createMock(\stdClass::class),
+        ]);
+
+        $lastModified = $extension->getLastModified();
+        $expected = max(
+            filemtime(dirname(__DIR__, 2).'/src/Extension/AttributeExtension.php'),
+            filemtime(__DIR__.'/Fixtures/ExtensionWithAttributes.php'),
+            filemtime(__FILE__),
+        );
+
+        $this->assertSame($expected, $lastModified);
+    }
 }

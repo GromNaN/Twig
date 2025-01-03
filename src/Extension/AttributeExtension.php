@@ -13,9 +13,6 @@ namespace Twig\Extension;
 
 use Twig\Attribute\AsTwigCallable;
 use Twig\TwigCallableInterface;
-use Twig\TwigFilter;
-use Twig\TwigFunction;
-use Twig\TwigTest;
 
 /**
  * Define Twig filters, functions, and tests with PHP attributes.
@@ -27,7 +24,6 @@ final class AttributeExtension extends AbstractExtension
     private array $filters;
     private array $functions;
     private array $tests;
-    private array $callables;
 
     /**
      * A list of objects or class names defining filters, functions, and tests using PHP attributes.
@@ -40,28 +36,34 @@ final class AttributeExtension extends AbstractExtension
 
     public function getFilters(): array
     {
-        $this->callables ??= ($this->callablesExtractor)();
+        if (!isset($this->filters)) {
+            $this->initTwigCallables();
+        }
 
-        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigFilter));
+        return $this->filters;
     }
 
     public function getFunctions(): array
     {
-        $this->callables ??= ($this->callablesExtractor)();
+        if (!isset($this->functions)) {
+            $this->initTwigCallables();
+        }
 
-        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigFunction));
+        return $this->functions;
     }
 
     public function getTests(): array
     {
-        $this->callables ??= ($this->callablesExtractor)();
+        if (!isset($this->tests)) {
+            $this->initTwigCallables();
+        }
 
-        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigTest));
+        return $this->tests;
     }
 
     private function initTwigCallables(): void
     {
-        $twigCallables = ['filters' => [], 'functions' => [], 'tests' => []];
+        $twigCallables = ['filter' => [], 'function' => [], 'test' => []];
 
         foreach(($this->callablesExtractor)() as $twigCallable) {
             if (!$twigCallable instanceof TwigCallableInterface) {
@@ -71,9 +73,9 @@ final class AttributeExtension extends AbstractExtension
             $twigCallables[$twigCallable->getType()][] = $twigCallable;
         }
 
-        $this->filters = $twigCallables['filters'];
-        $this->functions = $twigCallables['functions'];
-        $this->tests = $twigCallables['tests'];
+        $this->filters = $twigCallables['filter'];
+        $this->functions = $twigCallables['function'];
+        $this->tests = $twigCallables['test'];
 
         unset($this->callablesExtractor);
     }
@@ -89,7 +91,7 @@ final class AttributeExtension extends AbstractExtension
         return new self(
             static fn () => self::extractFromAttributes($classes),
             static function () use ($classes) {
-                return max(array_map(static fn ($objectOrClass) => filemtime((new \ReflectionClass($objectOrClass))->getFileName()), $classes));
+                return max(array_map(static fn ($objectOrClass) => is_file($filename = (new \ReflectionClass($objectOrClass))->getFileName()) ? filemtime($filename) : 0, $classes));
             }
         );
     }
@@ -126,6 +128,6 @@ final class AttributeExtension extends AbstractExtension
 
     public function getLastModified(): int
     {
-        return max(filemtime(__FILE__), $this->lastModified);
+        return max(filemtime(__FILE__), ($this->lastModified)());
     }
 }
