@@ -12,6 +12,7 @@
 namespace Twig\Extension;
 
 use Twig\Attribute\AsTwigCallable;
+use Twig\TwigCallableInterface;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 use Twig\TwigTest;
@@ -23,8 +24,59 @@ use Twig\TwigTest;
  */
 final class AttributeExtension extends AbstractExtension
 {
-    private array $classes;
+    private array $filters;
+    private array $functions;
+    private array $tests;
     private array $callables;
+
+    /**
+     * A list of objects or class names defining filters, functions, and tests using PHP attributes.
+     * When passing a class name, it must be available in runtimes.
+     */
+    public function __construct(private \Closure $callablesExtractor, private \Closure $lastModified)
+    {
+    }
+
+
+    public function getFilters(): array
+    {
+        $this->callables ??= ($this->callablesExtractor)();
+
+        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigFilter));
+    }
+
+    public function getFunctions(): array
+    {
+        $this->callables ??= ($this->callablesExtractor)();
+
+        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigFunction));
+    }
+
+    public function getTests(): array
+    {
+        $this->callables ??= ($this->callablesExtractor)();
+
+        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigTest));
+    }
+
+    private function initTwigCallables(): void
+    {
+        $twigCallables = ['filters' => [], 'functions' => [], 'tests' => []];
+
+        foreach(($this->callablesExtractor)() as $twigCallable) {
+            if (!$twigCallable instanceof TwigCallableInterface) {
+                throw new \LogicException(sprintf('"%s" is not a valid Twig callable.', get_debug_type($twigCallable)));
+            }
+
+            $twigCallables[$twigCallable->getType()][] = $twigCallable;
+        }
+
+        $this->filters = $twigCallables['filters'];
+        $this->functions = $twigCallables['functions'];
+        $this->tests = $twigCallables['tests'];
+
+        unset($this->callablesExtractor);
+    }
 
     /**
      * A list of objects or class names defining filters, functions, and tests using PHP attributes.
@@ -32,43 +84,21 @@ final class AttributeExtension extends AbstractExtension
      *
      * @param list<object|class-string> $classes
      */
-    public function __construct(array $classes)
+    public static function createFromClassList(array $classes): self
     {
-        $this->classes = $classes;
+        return new self(
+            static fn () => self::extractFromAttributes($classes),
+            static function () use ($classes) {
+                return max(array_map(static fn ($objectOrClass) => filemtime((new \ReflectionClass($objectOrClass))->getFileName()), $classes));
+            }
+        );
     }
 
-    public function getFilters(): array
+    private static function extractFromAttributes(array $classes)
     {
-        if (!isset($this->callables)) {
-            $this->initFromAttributes();
-        }
+        $twigCallables = [];
 
-        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigFilter));
-    }
-
-    public function getFunctions(): array
-    {
-        if (!isset($this->callables)) {
-            $this->initFromAttributes();
-        }
-
-        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigFunction));
-    }
-
-    public function getTests(): array
-    {
-        if (!isset($this->callables)) {
-            $this->initFromAttributes();
-        }
-
-        return array_values(array_filter($this->callables, static fn ($callable): bool => $callable instanceof TwigTest));
-    }
-
-    private function initFromAttributes()
-    {
-        $callables = [];
-
-        foreach ($this->classes as $objectOrClass) {
+        foreach ($classes as $objectOrClass) {
             $reflectionClass = new \ReflectionClass($objectOrClass);
             foreach ($reflectionClass->getMethods() as $reflectionMethod) {
                 foreach ($reflectionMethod->getAttributes(AsTwigCallable::class, \ReflectionAttribute::IS_INSTANCEOF) as $reflectionAttribute) {
@@ -86,25 +116,16 @@ final class AttributeExtension extends AbstractExtension
                         ));
                     }
 
-                    $callables[] = $callable;
+                    $twigCallables[] = $callable;
                 }
             }
         }
 
-        // Assign all at the end to avoid inconsistent state in case of exception
-        $this->callables = array_values($callables);
+        return $twigCallables;
     }
 
     public function getLastModified(): int
     {
-        $lastModified = filemtime(__FILE__);
-        foreach ($this->classes as $objectOrClass) {
-            $reflectionClass = new \ReflectionClass($objectOrClass);
-            if (is_file($filename = $reflectionClass->getFileName())) {
-                $lastModified = max($lastModified, filemtime($filename));
-            }
-        }
-
-        return $lastModified;
+        return max(filemtime(__FILE__), $this->lastModified);
     }
 }

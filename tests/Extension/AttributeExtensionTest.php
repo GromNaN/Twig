@@ -25,7 +25,7 @@ class AttributeExtensionTest extends TestCase
     {
         foreach ([new ExtensionWithAttributes(), ExtensionWithAttributes::class] as $object) {
             $found = false;
-            $extension = new AttributeExtension([$object]);
+            $extension = AttributeExtension::createFromClassList([$object]);
             foreach ($extension->getFilters() as $filter) {
                 if ($filter->getName() === $name) {
                     $found = true;
@@ -55,7 +55,7 @@ class AttributeExtensionTest extends TestCase
     {
         foreach ([new ExtensionWithAttributes(), ExtensionWithAttributes::class] as $object) {
             $found = false;
-            $extension = new AttributeExtension([$object]);
+            $extension = AttributeExtension::createFromClassList([$object]);
             foreach ($extension->getFunctions() as $function) {
                 if ($function->getName() === $name) {
                     $found = true;
@@ -85,7 +85,7 @@ class AttributeExtensionTest extends TestCase
     {
         foreach ([new ExtensionWithAttributes(), ExtensionWithAttributes::class] as $object) {
             $found = false;
-            $extension = new AttributeExtension([$object]);
+            $extension = AttributeExtension::createFromClassList([$object]);
             foreach ($extension->getTests() as $test) {
                 if ($test->getName() === $name) {
                     $found = true;
@@ -110,7 +110,7 @@ class AttributeExtensionTest extends TestCase
     public function testRuntimeExtension()
     {
         $class = ExtensionWithAttributes::class;
-        $extension = new AttributeExtension([$class]);
+        $extension = AttributeExtension::createFromClassList([$class]);
 
         $this->assertSame([$class, 'fooFilter'], $extension->getFilters()[0]->getCallable());
         $this->assertSame([$class, 'fooFunction'], $extension->getFunctions()[0]->getCallable());
@@ -119,7 +119,7 @@ class AttributeExtensionTest extends TestCase
 
     public function testFilterRequireOneArgument()
     {
-        $extension = new AttributeExtension([FilterWithoutValue::class]);
+        $extension = AttributeExtension::createFromClassList([FilterWithoutValue::class]);
 
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('"'.FilterWithoutValue::class.'::myFilter()" needs at least 1 arguments to be used Twig\Attribute\AsTwigFilter, but only 0 defined.');
@@ -129,7 +129,7 @@ class AttributeExtensionTest extends TestCase
 
     public function testTestRequireOneArgument()
     {
-        $extension = new AttributeExtension([TestWithoutValue::class]);
+        $extension = AttributeExtension::createFromClassList([TestWithoutValue::class]);
 
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('"'.TestWithoutValue::class.'::myTest()" needs at least 1 arguments to be used Twig\Attribute\AsTwigTest, but only 0 defined.');
